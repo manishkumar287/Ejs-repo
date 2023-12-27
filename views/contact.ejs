@@ -4,6 +4,10 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <script src="https://www.google.com/recaptcha/api.js" async defer></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/17.0.8/css/intlTelInput.css">
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/17.0.8/js/intlTelInput.min.js"></script>
+</head>
   <title>Contact Form with Captcha</title>
 
   <!-- Include the reCAPTCHA script -->
@@ -19,9 +23,9 @@
     <input type="email" id="email" name="email" required>
 
     <label for="phone">Phone Number:</label>
-    <select id="country" name="country" required>
+    <!-- <select id="country" name="country" required>
       <option value="us">United States</option>
-      <!-- Add more country options as needed -->
+      Add more country options as needed -->
     
     </select>
     <input type="tel" id="phone" name="phone" pattern="\d{3}-\d{3}-\d{4}" placeholder="123-456-7890" required>
@@ -36,5 +40,34 @@
 
     <button type="submit">Submit</button>
   </form>
+  <script>
+    // Initialize the international telephone input
+    var input = document.querySelector("#phone");
+    var iti = window.intlTelInput(input, {
+      initialCountry: "auto",
+      separateDialCode: true,
+      geoIpLookup: function(success, failure) {
+        // Make an AJAX request to get the user's country based on IP
+        $.get("https://ipinfo.io", function() {}, "jsonp").always(function(resp) {
+          var countryCode = (resp && resp.country) ? resp.country : "us";
+          success(countryCode);
+        });
+      },
+    });
+  
+    // Populate the country dropdown with the available countries
+    var countryDropdown = document.getElementById("country");
+    var countryData = window.intlTelInput.getCountryData();
+    countryData.forEach(function(country) {
+      var option = document.createElement("option");
+      option.value = country.iso2;
+      option.text = country.name;
+      countryDropdown.appendChild(option);
+    });
+  
+    // Set the initial selected country based on the user's location
+    var initialCountry = iti.getSelectedCountryData().iso2;
+    document.querySelector("#country [value='" + initialCountry + "']").selected = true;
+  </script>
 </body>
 </html>
